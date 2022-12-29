@@ -55,8 +55,8 @@ public class CrawlLapPCService
     {
         string html = "";
 
+        //html = WebUtility.HtmlDecode(httpClient.GetStringAsync(url).Result);
         html = WebUtility.HtmlDecode(httpClient.GetStringAsync(url).Result);
-
         //html = httpClient.PostAsync(url,new StringContent("")).Result.Content.ReadAsStringAsync().Result;
 
         return html;
@@ -66,7 +66,7 @@ public class CrawlLapPCService
     {
         List<ProductVariant> listProduct = new List<ProductVariant>();
         string htmlLearn = CrawlDataFromURL(url);
-        var CourseList = Regex.Matches(htmlLearn, @"<div class=""product-row"">(.*?)</span></div>", RegexOptions.Singleline);
+        var CourseList = Regex.Matches(htmlLearn, @"<div class=""product-row"">(.*?)%</div>", RegexOptions.Singleline);
         foreach (var course in CourseList)
         {
             #region Comment
@@ -91,10 +91,12 @@ public class CrawlLapPCService
                 ProductVariant productVariant = new ProductVariant();
                 productVariant.Name = name;
                 productVariant.SkuId = skuId;
-                productVariant.Price = Convert.ToInt64(price);
+                if (Regex.IsMatch(price, @"[0-9]"))
+                    productVariant.Price = Convert.ToInt64(price);
+                else productVariant.Price = -1;
 
 
-                var scopedInfomation = Regex.Match(sideBar, @"<tbody style=""(.*?)></table>",
+                var scopedInfomation = Regex.Match(sideBar, @"<tbody(.*?)</tbody>",
                     RegexOptions.Singleline).Value;
                 var listOPtionValueProduct =
                     Regex.Matches(scopedInfomation, @"<tr(.*?)</tr>", RegexOptions.Singleline);
@@ -104,28 +106,58 @@ public class CrawlLapPCService
                     #region lấy option
 
                     string option = "";
-                    var temp = Regex.Match(lecture.ToString(), @"<strong>(.*?)</strong>", RegexOptions.Singleline).Value.Replace("<strong>", "").Replace("</strong>", "").Replace("<span style=\"font-size:16px\">", "").Replace("</span>", "").Replace("</a>", "").Replace($@"<span style=""color:#000000"">", "");//.Replace("/", "");
+                    var temp = Regex.Match(lecture.ToString(), @"style=""background-color:#f7f7f7(.*?)</span>", RegexOptions.Singleline).Value;
+                    //.Replace("<td style=\"background-color:#f7f7f7 !important; border-color:#eeeeee; border-style:solid; border-width:1px; box-sizing:border-box; padding:8px; vertical-align:top; width:175px\">", "")
+                    //.Replace("<p>", "")
+                    //.Replace("<span style=\"font-size:16px\">", "")
+                    //.Replace("</span>", "").Replace("</a>", "")
+                    //.Replace($@"<span style=""color:#000000"">", "");//.Replace("/", "");
+                    var preOption = Regex
+                            .Match(temp, @"style=""font-size:16px"">(.*?)</span>", RegexOptions.Singleline).Value
+                            .Replace("style=\"font-size:16px\">", "")
+                            .Replace("</span>", "");
+
+
                     var removeHref = Regex.Match(temp.ToString(), @"<a(.*?)"">", RegexOptions.Singleline).Value;
-                    if (!string.IsNullOrEmpty(removeHref)) option = temp.Replace(removeHref, "");
-                    else option = temp.ToString();
+                    if (!string.IsNullOrEmpty(removeHref)) option = preOption.Replace(removeHref, "");
+                    else option = preOption.ToString();
 
                     #endregion
                     #region Lấy value
 
                     string value = "";
-                    var tempValue = Regex.Match(lecture.ToString(), @"""><span style=""font-size:16px"">(.*?)</td></tr>", RegexOptions.Singleline).Value.Replace("\"><span style=\"font-size:16px\">", "").Replace("</td></tr>", "");//.Replace("<span style=\"font-size:16px\">", "").Replace("</span>", "").Replace("</a>", "").Replace($@"<span style=""color:#000000"">", "");//.Replace("/", "");
+                    var tempValue = Regex.Match(lecture.ToString(),
+                        @"<td style=""border-color:#eeeeee(.*?)</td>",
+                        RegexOptions.Singleline).Value;
+                    //.Replace("<td style=\"border-color:#eeeeee; border-style:solid; border-width:1px; box-sizing:border-box; padding:8px; vertical-align:top; width:658px\">", "")
+                    //.Replace("</span>", "")
+                    //.Replace("<span style=\"font-size:16px\">", "")
+                    //.Replace("<ul>", "")
+                    //.Replace("<li>", "");
+                    //.Replace("</a>", "").Replace($@"<span style=""color:#000000"">", "");//.Replace("/", "");
+
+
                     string removeHrefValue = Regex.Match(tempValue.ToString(), @"<a(.*?)"">", RegexOptions.Singleline).Value;
-                    string removeHrefValue2 = Regex.Match(tempValue.ToString(), @"<strong>(.*?)px<span", RegexOptions.Singleline).Value.Replace("<span","");
-                    if (!string.IsNullOrEmpty(removeHrefValue)&& !string.IsNullOrEmpty(removeHrefValue2)) value = tempValue.Replace(removeHrefValue, "").Replace(removeHrefValue2, "");
+                    string removeHrefValue2 = Regex.Match(tempValue.ToString(), @"<strong>(.*?)px<span", RegexOptions.Singleline).Value.Replace("<span", "");
+                    if (!string.IsNullOrEmpty(removeHrefValue) && !string.IsNullOrEmpty(removeHrefValue2)) value = tempValue.Replace(removeHrefValue, "").Replace(removeHrefValue2, "");
                     else if (!string.IsNullOrEmpty(removeHrefValue)) value = tempValue.Replace(removeHrefValue, "");
-                    else value = tempValue.ToString(); 
+                    else value = tempValue.ToString();
 
                     #endregion
-                    if (!string.IsNullOrEmpty(option) && !string.IsNullOrEmpty(value))
+                    if (!string.IsNullOrEmpty(option) && !string.IsNullOrEmpty(tempValue))
                     {
+                        var listString = new List<string>();
                         Option_Value Subitem = new Option_Value();
                         Subitem.Option = option;
-                        Subitem.Value = value.Replace("<span style=\"font-size:16px\">", "").Replace("</span>", "").Replace("</a>", "").Replace($@"<span style=""color:#000000"">", "");//.Replace("/", "");;
+                        var listValueOfOption =
+                            Regex.Matches(tempValue, @"span style=""font-size:16px"">(.*?)</span>", RegexOptions.Singleline);
+                        foreach (var VARIABLE in listValueOfOption)
+                        {
+                            var aaaaaa = VARIABLE.ToString().Replace("span style=\"font-size:16px\">", "").Replace("</span>", "").Replace("</a>", "").Replace($@"<span style=""color:#000000"">", "");//.Replace("/", "");;
+                            if(!string.IsNullOrEmpty(aaaaaa))  listString.Add(aaaaaa);
+                        }
+
+                        Subitem.Value = listString;
                         productVariant.OptionValueColection.Add(Subitem);
                     }
                 }
@@ -135,10 +167,10 @@ public class CrawlLapPCService
                 foreach (var lecture in listImage)
                 {
                     string image = "";
-                    string temp= Regex.Match(lecture.ToString(), @"<img src=""(.*?)/>", RegexOptions.Singleline).Value.Replace("<img src=\"", "").Replace("/>", "");
+                    string temp = Regex.Match(lecture.ToString(), @"<img src=""(.*?)/>", RegexOptions.Singleline).Value.Replace("<img src=\"", "").Replace("/>", "");
                     string removeHrefValue = Regex.Match(temp.ToString(), @"alt=""(.*?)""", RegexOptions.Singleline).Value;
-                    if (!string.IsNullOrEmpty(removeHrefValue)) image= temp.Replace(removeHrefValue, "").Replace(@"\","").Replace('"', ' ');
-                    else image = temp.ToString().Replace("alt=","").Replace("\"","");
+                    if (!string.IsNullOrEmpty(removeHrefValue)) image = temp.Replace(removeHrefValue, "").Replace(@"\", "").Replace('"', ' ');
+                    else image = temp.ToString().Replace("alt=", "").Replace("\"", "");
                     if (!string.IsNullOrEmpty(image))
                         productVariant.ImageCollection.Add(image);
                 }
