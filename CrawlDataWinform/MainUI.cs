@@ -32,7 +32,7 @@ namespace CrawlDataWinform
 
             ExportToFileWithJson(listProducts);
 
-            MessageBox.Show($"cào thành công {listProducts.Count} sản Phẩm", "Chán lắm!",MessageBoxButtons.OK);
+            MessageBox.Show($@"cào thành công {listProducts.Count} sản Phẩm", "Chán lắm!",MessageBoxButtons.OK);
         }
 
         void ExportToFileWithJson(List<ProductVariant> values)
