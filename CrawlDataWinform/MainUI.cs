@@ -17,6 +17,7 @@ namespace CrawlDataWinform
 
         private void button1_Click(object sender, EventArgs e)
         {
+            
             string page = textBox_CrawlPc.Text;
             //Task t = new Task(() => { Crawl("/laptop-acer"); });
             //t.Start();
@@ -37,9 +38,9 @@ namespace CrawlDataWinform
 
         void ExportToFileWithJson(List<ProductVariant> values)
         { var list=new List<ProductVariant>();
-            if (File.Exists(@"D:\DATN\Crawl_Data\Moniter.json"))
+            if (File.Exists(@"D:\DATN\Crawl_Data\HeadPhone.json"))
             {
-                using (StreamReader r = new StreamReader(@"D:\DATN\Crawl_Data\Moniter.json"))
+                using (StreamReader r = new StreamReader(@"D:\DATN\Crawl_Data\HeadPhone.json"))
                 {
                     string json = r.ReadToEnd();
                     list = JsonConvert.DeserializeObject<List<ProductVariant>>(json);
@@ -56,11 +57,12 @@ namespace CrawlDataWinform
             // tuần tự hóa JSON trực tiếp thành một tệp 
 
             // serialize JSON directly to a file
-            using (StreamWriter file = File.CreateText(@"D:\DATN\Crawl_Data\Moniter.json"))
+            using (StreamWriter file = File.CreateText(@"D:\DATN\Crawl_Data\HeadPhone.json"))
             {
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Serialize(file, list);
             }
         }
+
     }
 }
