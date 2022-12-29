@@ -66,7 +66,7 @@ public class CrawlLapPCService
     {
         List<ProductVariant> listProduct = new List<ProductVariant>();
         string htmlLearn = CrawlDataFromURL(url);
-        var CourseList = Regex.Matches(htmlLearn, @"<div class=""product-row"">(.*?)</span></div>", RegexOptions.Singleline);
+        var CourseList = Regex.Matches(htmlLearn, @"<div class=""product-row"">(.*?)%</div>", RegexOptions.Singleline);
         foreach (var course in CourseList)
         {
             #region Comment
@@ -91,10 +91,14 @@ public class CrawlLapPCService
                 ProductVariant productVariant = new ProductVariant();
                 productVariant.Name = name;
                 productVariant.SkuId = skuId;
-                productVariant.Price = Convert.ToInt64(price);
+                if(Regex.IsMatch(price,@"[0-9]"))
+                    productVariant.Price = Convert.ToInt64(price);
+                else productVariant.Price = -1;
 
 
-                var scopedInfomation = Regex.Match(sideBar, @"<tbody style=""(.*?)></table>",
+
+
+                    var scopedInfomation = Regex.Match(sideBar, @"<tbody style=""(.*?)></table>",
                     RegexOptions.Singleline).Value;
                 var listOPtionValueProduct =
                     Regex.Matches(scopedInfomation, @"<tr(.*?)</tr>", RegexOptions.Singleline);

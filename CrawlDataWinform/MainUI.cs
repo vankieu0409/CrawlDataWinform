@@ -37,9 +37,9 @@ namespace CrawlDataWinform
 
         void ExportToFileWithJson(List<ProductVariant> values)
         { var list=new List<ProductVariant>();
-            if (File.Exists(@"E:\DATN\Crawl_Data\lap.json"))
+            if (File.Exists(@"E:\DATN\Crawl_Data\CPU.json"))
             {
-                using (StreamReader r = new StreamReader(@"E:\DATN\Crawl_Data\lap.json"))
+                using (StreamReader r = new StreamReader(@"E:\DATN\Crawl_Data\CPU.json"))
                 {
                     string json = r.ReadToEnd();
                     list = JsonConvert.DeserializeObject<List<ProductVariant>>(json);
@@ -56,7 +56,7 @@ namespace CrawlDataWinform
             // tuần tự hóa JSON trực tiếp thành một tệp 
 
             // serialize JSON directly to a file
-            using (StreamWriter file = File.CreateText(@"E:\DATN\Crawl_Data\lap.json"))
+            using (StreamWriter file = File.CreateText(@"D:\DATN\Crawl_Data\CPU.json"))
             {
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Serialize(file, list);
