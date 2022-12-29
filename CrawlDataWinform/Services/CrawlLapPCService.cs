@@ -106,21 +106,22 @@ public class CrawlLapPCService
                     #region lấy option
 
                     string option = "";
-                    var temp = Regex.Match(lecture.ToString(), @"style=""background-color:#f7f7f7(.*?)</span>", RegexOptions.Singleline).Value;
+                    var temp = Regex.Match(lecture.ToString(), @"style=""background-color:#f7f7f7(.*?)</td>", RegexOptions.Singleline).Value;
                     //.Replace("<td style=\"background-color:#f7f7f7 !important; border-color:#eeeeee; border-style:solid; border-width:1px; box-sizing:border-box; padding:8px; vertical-align:top; width:175px\">", "")
                     //.Replace("<p>", "")
                     //.Replace("<span style=\"font-size:16px\">", "")
                     //.Replace("</span>", "").Replace("</a>", "")
                     //.Replace($@"<span style=""color:#000000"">", "");//.Replace("/", "");
-                    var preOption = Regex
-                            .Match(temp, @"style=""font-size:16px"">(.*?)</span>", RegexOptions.Singleline).Value
-                            .Replace("style=\"font-size:16px\">", "")
-                            .Replace("</span>", "");
+
+                    //var preOption = Regex
+                    //        .Match(temp, @"style=""font-size:16px"">(.*?)</span>", RegexOptions.Singleline).Value
+                    //        .Replace("style=\"font-size:16px\">", "")
+                    //        .Replace("</span>", "");
 
 
-                    var removeHref = Regex.Match(temp.ToString(), @"<a(.*?)"">", RegexOptions.Singleline).Value;
-                    if (!string.IsNullOrEmpty(removeHref)) option = preOption.Replace(removeHref, "");
-                    else option = preOption.ToString();
+                    var removeHref = Regex.Match(temp.ToString(), @"style=""background-color:#f7f7f7(.*?)"">", RegexOptions.Singleline).Value;
+                    if (!string.IsNullOrEmpty(removeHref)) option = temp.Replace(removeHref, "");
+                    else option = temp.ToString();
 
                     #endregion
                     #region Lấy value
@@ -137,7 +138,7 @@ public class CrawlLapPCService
                     //.Replace("</a>", "").Replace($@"<span style=""color:#000000"">", "");//.Replace("/", "");
 
 
-                    string removeHrefValue = Regex.Match(tempValue.ToString(), @"<a(.*?)"">", RegexOptions.Singleline).Value;
+                    string removeHrefValue = Regex.Match(tempValue.ToString(), @"<td style=""border-color:#eeeeee(.*?)"">", RegexOptions.Singleline).Value;
                     string removeHrefValue2 = Regex.Match(tempValue.ToString(), @"<strong>(.*?)px<span", RegexOptions.Singleline).Value.Replace("<span", "");
                     if (!string.IsNullOrEmpty(removeHrefValue) && !string.IsNullOrEmpty(removeHrefValue2)) value = tempValue.Replace(removeHrefValue, "").Replace(removeHrefValue2, "");
                     else if (!string.IsNullOrEmpty(removeHrefValue)) value = tempValue.Replace(removeHrefValue, "");
@@ -146,14 +147,20 @@ public class CrawlLapPCService
                     #endregion
                     if (!string.IsNullOrEmpty(option) && !string.IsNullOrEmpty(tempValue))
                     {
+                        string replaceTagA;
                         var listString = new List<string>();
                         Option_Value Subitem = new Option_Value();
-                        Subitem.Option = option;
+                        Subitem.Option = option.Replace("</td>","");
                         var listValueOfOption =
-                            Regex.Matches(tempValue, @"span style=""font-size:16px"">(.*?)</span>", RegexOptions.Singleline);
+                            Regex.Matches(tempValue, @"<td style=""border-color:#eeeeee(.*?)</td>", RegexOptions.Singleline);
                         foreach (var VARIABLE in listValueOfOption)
                         {
-                            var aaaaaa = VARIABLE.ToString().Replace("span style=\"font-size:16px\">", "").Replace("</span>", "").Replace("</a>", "").Replace($@"<span style=""color:#000000"">", "");//.Replace("/", "");;
+                            string removeHrefValueaa = Regex.Match(VARIABLE.ToString(), @"<a(.*?)"">", RegexOptions.Singleline).Value;
+                            if (!string.IsNullOrEmpty(removeHrefValueaa))
+                                replaceTagA = VARIABLE.ToString().Replace(removeHrefValueaa, "").Replace(Regex.Match(VARIABLE.ToString(), @"<td style=""border-color:#eeeeee(.*?)"">", RegexOptions.Singleline).Value,"");
+
+                            else replaceTagA = VARIABLE.ToString().Replace(Regex.Match(VARIABLE.ToString(), @"<td style=""border-color:#eeeeee(.*?)"">", RegexOptions.Singleline).Value, "");
+                            var aaaaaa = replaceTagA.ToString().Replace(" </span>", "").Replace("</a>", "").Replace($@"</td>", "");//.Replace("/", "");;
                             if(!string.IsNullOrEmpty(aaaaaa))  listString.Add(aaaaaa);
                         }
 
